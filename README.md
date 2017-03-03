@@ -22,6 +22,7 @@ bash ./test-mr.sh
 go test -run TestListBuckets
 go test -run TestCreateBuckets
 go test -run TestUploadFileStream
+go test -run TestDownloadFile
 ```
 
 ## Contributing
