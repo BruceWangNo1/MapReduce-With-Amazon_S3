@@ -7,11 +7,11 @@ import (
 	"strings"
 	"unicode"
 	"strconv"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/aws"
-    "github.com/aws/aws-sdk-go/aws/session"
+	// "github.com/aws/aws-sdk-go/service/s3"
+	// "github.com/aws/aws-sdk-go/aws"
+ 	// "github.com/aws/aws-sdk-go/aws/session"
     //"github.com/aws/aws-sdk-go/service/s3/s3manager"
-    "log"
+    //"log"
 )
 
 // The mapping function is called once for each piece of the input.
@@ -52,7 +52,7 @@ func main() {
 		var mr *sophie.Master
 		fmt.Println(os.Args[2])
 		if os.Args[2] == "sequential" {
-			mr = sophie.Sequential("wcseq", sophie.getKeys("pg"), 3, mapF, reduceF) // os.Args[3:]
+			mr = sophie.Sequential("wcseq", sophie.GetKeys("pg"), 3, mapF, reduceF) // os.Args[3:]
 		} else {
 			mr = sophie.Distributed("wcseq", os.Args[3:], 3, os.Args[2])
 		}

@@ -72,7 +72,7 @@ func main() {
 	} else if os.Args[1] == "master" {
 		var mr *sophie.Master
 		if os.Args[2] == "sequential" {
-			mr = sophie.Sequential("iiseq", sophie.getKeys("pg"), 3, mapF, reduceF) // os.Args[3:]
+			mr = sophie.Sequential("iiseq", sophie.GetKeys("pg"), 3, mapF, reduceF) // os.Args[3:]
 		} else {
 			mr = sophie.Distributed("iiseq", os.Args[3:], 3, os.Args[2])
 		}

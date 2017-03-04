@@ -46,7 +46,7 @@ func mergeName(jobName string, reduceTask int) string {
 	return "mrtmp." + jobName + "-res-" + strconv.Itoa(reduceTask)
 }
 
-func getKeys(prefix string) []string {
+func GetKeys(prefix string) []string {
 	fmt.Println("list objects in a bucket")
 	svc := s3.New(session.New(&aws.Config{Region: aws.String("ap-northeast-1")}))
 	result, err := svc.ListObjects(&s3.ListObjectsInput{
