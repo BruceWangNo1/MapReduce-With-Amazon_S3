@@ -5,7 +5,7 @@ import (
 	"log"
 	"net"
 	"net/rpc"
-	"os"
+	//"os"
 	"sync"
 )
 
@@ -75,8 +75,9 @@ func RunWorker(MasterAddress string, me string,
 	wk.nRPC = nRPC
 	rpcs := rpc.NewServer()
 	rpcs.Register(wk)
-	os.Remove(me) // only need for "unix"
-	l, e := net.Listen("unix", me)
+	// os.Remove(me) // only need for "unix"
+	// l, e := net.Listen("unix", me)
+	l, e := net.Listen("tcp", me)
 	if e != nil {
 		log.Fatal("RunWorker: worker ", me, " error: ", e)
 	}

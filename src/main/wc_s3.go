@@ -54,7 +54,7 @@ func main() {
 		if os.Args[2] == "sequential" {
 			mr = sophie.Sequential("wcseq", sophie.GetKeys("pg"), 3, mapF, reduceF) // os.Args[3:]
 		} else {
-			mr = sophie.Distributed("wcseq", os.Args[3:], 3, os.Args[2])
+			mr = sophie.Distributed("wcseq", sophie.GetKeys("pg"), 3, os.Args[2]) // os.Args[3:]
 		}
 		mr.Wait()
 	} else {
