@@ -25,6 +25,15 @@ go test -run TestUploadFileStream
 go test -run TestDownloadFile
 ```
 
+Start three terminals and run the following three commands respectively (you should try to run the last two simultaneously becuase they finish really quickly):
+
+```
+/src/main
+go run wc_s3.go master distributed pg*.txt
+go run wc_s3.go worker localhost:7777 localhost:7778
+go run wc_s3.go worker localhost:7777 localhost:7779
+```
+
 ## Contributing
 1. Fork it!
 2. Create your feature branch: `git checkout -b my-new-feature`
