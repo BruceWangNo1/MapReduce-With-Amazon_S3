@@ -29,7 +29,7 @@ Start three terminals and run the following three commands respectively (you sho
 
 ```
 /src/main
-go run wc_s3.go master distributed pg*.txt
+go run wc_s3.go master distributed pg
 go run wc_s3.go worker localhost:7777 localhost:7778
 go run wc_s3.go worker localhost:7777 localhost:7779
 ```
