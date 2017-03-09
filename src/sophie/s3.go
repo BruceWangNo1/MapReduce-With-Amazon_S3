@@ -51,6 +51,8 @@ func writeToS3(infile string) {
 	}
 
 	log.Println("Successfully uploaded to", result.Location)
+
+	removeFile(infile)
 }
 
 

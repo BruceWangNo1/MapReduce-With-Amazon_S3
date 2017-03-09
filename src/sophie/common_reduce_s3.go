@@ -19,11 +19,11 @@ func doReduce(
 ) {
 	kvMap := make(map[string][]string) // pair (Key, []Values)
 	for m := 0; m < nMap; m++ {
-		fi, err := readFromS3(reduceName(jobName, m, reduceTaskNumber))
+		fileName := reduceName(jobName, m, reduceTaskNumber)
+		fi, err := readFromS3(fileName)
 		if err != nil {
 			log.Fatal("doReduce 2: ", err)
 		}
-		defer fi.Close() // this will run just before the function finishes
 
 		// Decoder
 		dec := json.NewDecoder(fi)
@@ -37,10 +37,13 @@ func doReduce(
 			}
 			kvMap[kv.Key] = append(kvMap[kv.Key], kv.Value)
 		}
+		fi.Close()
+		removeFile(fileName)
 	}
 
 	// Create merge file.
-	mergeFile, err := os.Create(mergeName(jobName, reduceTaskNumber))
+	mergeFileName := mergeName(jobName, reduceTaskNumber)
+	mergeFile, err := os.Create(mergeFileName)
 	if err != nil {
 		log.Fatal("doReduce 1: ", err)
 	}
@@ -51,8 +54,8 @@ func doReduce(
 		enc.Encode(KeyValue{key, reduceF(key, value)})
 	}
 
-	writeToS3(mergeFile.Name())
 	mergeFile.Close()
+	writeToS3(mergeFileName)
 }
 // package sophie
 

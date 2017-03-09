@@ -5,6 +5,7 @@ import (
 	"os"
 	"fmt"
 	"encoding/json"
+	//"log"
 )
 
 // doMap does the job of a map worker: it reads one of the input files
@@ -28,15 +29,17 @@ func doMap(
 	contents := make([]byte, inf.Size())
 	file.Read(contents)
 	file.Close()
+	removeFile(inFile)
 
 	kv := mapF(inFile, string(contents))
 	filesenc := make([]*json.Encoder, nReduce)
 	files := make([]*os.File, nReduce)
 
 	for i := range filesenc {
-		file, err := os.Create(reduceName(jobName, mapTaskNumber, i))
+		fileName := reduceName(jobName, mapTaskNumber, i)
+		file, err := os.Create(fileName)
 		if err != nil {
-			fmt.Printf("%s Create Failed\n", reduceName(jobName, mapTaskNumber, i))
+			fmt.Printf("%s Create Failed\n", fileName)
 		} else {
 			filesenc[i] = json.NewEncoder(file)
 			files[i] = file
@@ -51,8 +54,8 @@ func doMap(
 	}
 
 	for _, f := range files {
-		writeToS3(f.Name())
 		f.Close()
+		writeToS3(f.Name())
 	}
 }
 

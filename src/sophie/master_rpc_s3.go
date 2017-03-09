@@ -5,7 +5,7 @@ import (
 	"log"
 	"net"
 	"net/rpc"
-	// "os"
+	"os"
 )
 
 // Shutdown is an RPC method that shuts down the Master's RPC server.
@@ -20,7 +20,7 @@ func (mr *Master) Shutdown(_, _*struct{}) error {
 func (mr *Master) startRPCServer() {
 	rpcs := rpc.NewServer()
 	rpcs.Register(mr)
-	// os.Remove(mr.address) // this is done in order to delete the pre-existing file, only needed for "unix"
+	os.Remove(mr.address) // this is done in order to delete the pre-existing file, only needed for "unix"
 	l, e := net.Listen("tcp", mr.address)
 	if e != nil {
 		log.Fatal("RegistrationServer", mr.address, " error: ", e)
@@ -61,5 +61,6 @@ func (mr *Master) stopRPCServer() {
 	if ok == false {
 		fmt.Printf("Cleanup: RPC %s error\n", mr.address)
 	}
+	os.Remove(mr.address)
 	debug("cleanupRegistration: done\n")
 }

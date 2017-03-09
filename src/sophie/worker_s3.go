@@ -7,6 +7,7 @@ import (
 	"net/rpc"
 	//"os"
 	"sync"
+	"os"
 )
 
 // Worker holds the state for a server waiting for DoTask or Shutdown RPCs
@@ -19,6 +20,7 @@ type Worker struct {
 	nRPC int //protected by mutex
 	nTasks int // protected by mutex
 	l net.Listener
+	files []string // files used. record every file used and remove all later
 }
 
 // DoTask is called by the master when a new task is being scheduled on this 
@@ -29,6 +31,7 @@ func (wk *Worker) DoTask(arg *DoTaskArgs, _ *struct{}) error {
 
 	switch arg.Phase {
 	case mapPhase:
+		// wk.files = append(wk.files, arg.File) // keep track of all the files downloaded and saved locally
 		doMap(arg.JobName, arg.TaskNumber, arg.File, arg.NumOtherPhase, wk.Map)
 	case reducePhase:
 		doReduce(arg.JobName, arg.TaskNumber, arg.NumOtherPhase, wk.Reduce)
@@ -47,6 +50,11 @@ func (wk *Worker) Shutdown(_ *struct{}, res *ShutdownReply) error {
 	res.Ntasks = wk.nTasks
 	wk.nRPC = 1
 	wk.nTasks-- // Don't count the shutdown RPC
+
+	wk.l.Close()
+	// debug("RunWorker %s exit\n", wk.name)
+	os.Remove(wk.name)
+
 	return nil
 }
 
@@ -54,10 +62,18 @@ func (wk *Worker) Shutdown(_ *struct{}, res *ShutdownReply) error {
 func (wk *Worker) register(master string) {
 	args := new(RegisterArgs)
 	args.Worker = wk.name
-	ok := call(master, "Master.Register", args, new(struct{}))
-	if ok == false {
-		fmt.Printf("Register: RPC %s register error\n", master)
+
+	ok := false
+	for ok == false {
+		ok = call(master, "Master.Register", args, new(struct{}))
 	}
+	//ok := call(master, "Master.Register", args, new(struct{}))
+	//if ok == false {
+	//	fmt.Printf("Register: RPC %s register error\n", master)
+	//}ok := call(master, "Master.Register", args, new(struct{}))
+	//if ok == false {
+	//	fmt.Printf("Register: RPC %s register error\n", master)
+	//}
 }
 
 // RunWorker sets up a connection with the master, registers its address, and 
@@ -75,7 +91,7 @@ func RunWorker(MasterAddress string, me string,
 	wk.nRPC = nRPC
 	rpcs := rpc.NewServer()
 	rpcs.Register(wk)
-	// os.Remove(me) // only need for "unix"
+	os.Remove(me) // only need for "unix"
 	// l, e := net.Listen("unix", me)
 	l, e := net.Listen("tcp", me)
 	if e != nil {
@@ -106,6 +122,6 @@ func RunWorker(MasterAddress string, me string,
 			break
 		}
 	}
-	wk.l.Close()
+	//wk.l.Close()
 	debug("RunWorker %s exit\n", me)
 }

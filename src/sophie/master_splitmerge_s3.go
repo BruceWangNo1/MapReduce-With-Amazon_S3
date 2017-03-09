@@ -32,6 +32,7 @@ func (mr *Master) merge() {
 			kvs[kv.Key] = kv.Value
 		}
 		file.Close()
+		removeFile(p)
 	}
 	var keys []string
 	for k := range kvs {
@@ -50,7 +51,6 @@ func (mr *Master) merge() {
 	w.Flush()
 	
 	writeToS3(file.Name())
-	file.Close()
 }
 
 // removeFile is a simple wrapper around os.Remove that logs errors.
