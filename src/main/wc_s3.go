@@ -52,9 +52,9 @@ func main() {
 		var mr *sophie.Master
 		fmt.Println(os.Args[2])
 		if os.Args[2] == "sequential" {
-			mr = sophie.Sequential("wcseq", sophie.GetKeys("pg"), 3, mapF, reduceF) // os.Args[3:]
+			mr = sophie.Sequential("wcseq", sophie.GetKeys(os.Args[3]), 3, mapF, reduceF) // os.Args[3:]
 		} else {
-			mr = sophie.Distributed("wcseq", sophie.GetKeys("pg"), 3, os.Args[2]) // os.Args[3:]
+			mr = sophie.Distributed("wcseq", sophie.GetKeys(os.Args[3]), 3, os.Args[2]) // os.Args[3:]
 		}
 		mr.Wait()
 	} else {
