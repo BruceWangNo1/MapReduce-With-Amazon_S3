@@ -14,8 +14,8 @@ import (
 func (mr *Master) merge() {
 	debug("Merge phase")
 	kvs := make(map[string]string)
-	for i := 0; i < mr.nReduce; i++ {
-		p := mergeName(mr.jobName, i)
+	for i := 0; i < mr.NReduce; i++ {
+		p := mergeName(mr.JobName, i)
 		fmt.Printf("Merge: read %s\n", p)
 		file, err := readFromS3(p)
 		if err != nil {
@@ -40,7 +40,7 @@ func (mr *Master) merge() {
 	}
 	sort.Strings(keys)
 
-	file, err := os.Create("mrtmp." + mr.jobName)
+	file, err := os.Create("mrtmp." + mr.JobName)
 	if err != nil {
 		log.Fatal("Merge: create ", err)
 	}
@@ -63,13 +63,13 @@ func removeFile(n string) {
 
 // CleanupFiles removes all intermediate files produced by running mapreduce.
 func (mr *Master) CleanupFiles() {
-	for i := range mr.files {
-		for j := 0; j < mr.nReduce; j++ {
-			removeFile(reduceName(mr.jobName, i, j))
+	for i := range mr.Files {
+		for j := 0; j < mr.NReduce; j++ {
+			removeFile(reduceName(mr.JobName, i, j))
 		}
 	}
-	for i := 0; i < mr.nReduce; i++ {
-		removeFile(mergeName(mr.jobName, i))
+	for i := 0; i < mr.NReduce; i++ {
+		removeFile(mergeName(mr.JobName, i))
 	}
-	removeFile("mrtmp." + mr.jobName)
+	removeFile("mrtmp." + mr.JobName)
 }

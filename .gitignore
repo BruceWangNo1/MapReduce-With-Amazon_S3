@@ -1,3 +1,9 @@
 bin
 pkg
 src/github.com
+.idea
+master.log
+src/main/diff.out
+src/rpc_learning/
+worker_1.log
+worker_2.log

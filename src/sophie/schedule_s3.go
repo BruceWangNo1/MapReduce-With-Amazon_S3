@@ -11,11 +11,11 @@ func (mr *Master) schedule(phase jobPhase) {
 	var nios int // number of inputs (for reduce) or outputs (for map)
 	switch phase {
 	case mapPhase:
-		ntasks = len(mr.files)
-		nios = mr.nReduce
+		ntasks = len(mr.Files)
+		nios = mr.NReduce
 	case reducePhase:
-		ntasks = mr.nReduce
-		nios = len(mr.files)
+		ntasks = mr.NReduce
+		nios = len(mr.Files)
 	}
 
 	fmt.Printf("Schedule: %v %v tasks (%d I/Os)\n", ntasks, phase, nios)
@@ -32,19 +32,19 @@ func (mr *Master) schedule(phase jobPhase) {
 			debug("DEBUG: current taskNum: %v, nios: %v, phase: %v\n", taskNum, nios, phase)
 			defer wg.Done()
 			for {
-				worker := <-mr.registerChannel // get worker RPC server, worker == address
+				worker := <-mr.RegisterChannel // get worker RPC server, worker == Address
 				debug("DEBUG: current worker port: %v\n", worker)
 
 				var args DoTaskArgs
-				args.JobName = mr.jobName
-				args.File = mr.files[taskNum]
+				args.JobName = mr.JobName
+				args.File = mr.Files[taskNum]
 				args.Phase = phase
 				args.TaskNumber = taskNum
 				args.NumOtherPhase = nios
 				ok := call(worker, "Worker.DoTask", &args, new(struct{}))
 				if ok {
 					go func() {
-						mr.registerChannel <- worker
+						mr.RegisterChannel <- worker
 					}()
 					break
 				}

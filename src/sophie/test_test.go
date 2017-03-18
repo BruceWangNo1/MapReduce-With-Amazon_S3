@@ -160,25 +160,25 @@ func TestCreateBucket(t *testing.T) {
 func TestBasic(t *testing.T) {
 	mr := setup()
 	for i := 0; i < 2; i++ {
-		go RunWorker(mr.address, port("worker"+strconv.Itoa(i)),
+		go RunWorker(mr.Address, port("worker"+strconv.Itoa(i)),
 			MapFunc, ReduceFunc, -1)
 	}
 	mr.Wait()
-	check(t, mr.files)
-	checkWorker(t, mr.stats)
+	check(t, mr.Files)
+	checkWorker(t, mr.Stats)
 	cleanup(mr)
 }
 
 func TestOneFailure(t *testing.T) {
 	mr := setup()
 	// start 2 workers that fail after 10 tasks
-	go RunWorker(mr.address, port("worker"+strconv.Itoa(0)),
+	go RunWorker(mr.Address, port("worker"+strconv.Itoa(0)),
 		MapFunc, ReduceFunc, 10)
-	go RunWorker(mr.address, port("worker"+strconv.Itoa(1)),
+	go RunWorker(mr.Address, port("worker"+strconv.Itoa(1)),
 		MapFunc, ReduceFunc, -1)
 	mr.Wait()
-	check(t, mr.files)
-	checkWorker(t, mr.stats)
+	check(t, mr.Files)
+	checkWorker(t, mr.Stats)
 	cleanup(mr)
 }
 func TestManyFailures(t *testing.T) {
@@ -187,17 +187,17 @@ func TestManyFailures(t *testing.T) {
 	done := false
 	for !done {
 		select {
-		case done = <-mr.doneChannel:
-			check(t, mr.files)
+		case done = <-mr.DoneChannel:
+			check(t, mr.Files)
 			cleanup(mr)
 			break
 		default:
 			// Start 2 workers each sec. The workers fail after 10 tasks
 			w := port("worker" + strconv.Itoa(i))
-			go RunWorker(mr.address, w, MapFunc, ReduceFunc, 10)
+			go RunWorker(mr.Address, w, MapFunc, ReduceFunc, 10)
 			i++
 			w = port("worker" + strconv.Itoa(i))
-			go RunWorker(mr.address, w, MapFunc, ReduceFunc, 10)
+			go RunWorker(mr.Address, w, MapFunc, ReduceFunc, 10)
 			i++
 			time.Sleep(1 * time.Second)
 		}
@@ -301,7 +301,7 @@ func checkWorker(t *testing.T, l []int) {
 
 func cleanup(mr *Master) {
 	mr.CleanupFiles()
-	for _, f := range mr.files {
+	for _, f := range mr.Files {
 		removeFile(f)
 	}
 }

@@ -20,14 +20,14 @@ func (mr *Master) Shutdown(_, _*struct{}) error {
 func (mr *Master) startRPCServer() {
 	rpcs := rpc.NewServer()
 	rpcs.Register(mr)
-	os.Remove(mr.address) // this is done in order to delete the pre-existing file, only needed for "unix"
-	l, e := net.Listen("tcp", mr.address)
+	os.Remove(mr.Address) // this is done in order to delete the pre-existing file, only needed for "unix"
+	l, e := net.Listen("tcp", mr.Address)
 	if e != nil {
-		log.Fatal("RegistrationServer", mr.address, " error: ", e)
+		log.Fatal("RegistrationServer", mr.Address, " error: ", e)
 	}
 	mr.l = l
 
-	// now that we are listening on the master address, can fork off 
+	// now that we are listening on the master Address, can fork off
 	// accepting connections to another thread.
 	go func() {
 		loop:
@@ -57,10 +57,10 @@ func (mr *Master) startRPCServer() {
 // server thread and the current thread.
 func (mr *Master) stopRPCServer() {
 	var reply ShutdownReply
-	ok := call(mr.address, "Master.Shutdown", new(struct{}), &reply)
+	ok := call(mr.Address, "Master.Shutdown", new(struct{}), &reply)
 	if ok == false {
-		fmt.Printf("Cleanup: RPC %s error\n", mr.address)
+		fmt.Printf("Cleanup: RPC %s error\n", mr.Address)
 	}
-	os.Remove(mr.address)
+	os.Remove(mr.Address)
 	debug("cleanupRegistration: done\n")
 }

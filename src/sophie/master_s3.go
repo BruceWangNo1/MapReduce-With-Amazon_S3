@@ -4,25 +4,34 @@ import (
 	"fmt"
 	"net"
 	"sync"
+	"os/user"
+	"time"
 )
 
 // Master holds all the states that the master needs to keep track off
 type Master struct {
 	sync.Mutex
 
-	address string
-	registerChannel chan string
-	doneChannel chan bool
-	workers []string //protected by mutex
+	Address string
+	RegisterChannel chan string
+	DoneChannel chan bool
+	Workers []string //protected by mutex
 
 	// Per-task information
-	jobName string //name of the currently executing job
-	files []string //input files
-	nReduce int //number of reduce partitions
+	JobName string //name of the currently executing job
+	Files []string //input files
+	NReduce int //number of reduce partitions
 
 	shutdown chan struct{}
 	l net.Listener
-	stats []int
+	Stats []int
+
+	// added for panel package
+	User string
+	StartTime time.Time
+	SchedulingMode string
+	ElapsedTime float64
+
 }
 
 // Register is an RPC method that is called by workers after they have started 
@@ -31,9 +40,9 @@ func (mr *Master) Register(args *RegisterArgs, _ *struct{}) error {
 	mr.Lock()
 	defer mr.Unlock()
 	debug("Register: worker %s\n", args.Worker)
-	mr.workers = append(mr.workers, args.Worker)
+	mr.Workers = append(mr.Workers, args.Worker)
 	go func() {
-		mr.registerChannel <- args.Worker
+		mr.RegisterChannel <- args.Worker
 	}()
 	return nil
 }
@@ -41,10 +50,19 @@ func (mr *Master) Register(args *RegisterArgs, _ *struct{}) error {
 // newMaster initialize a new Map/Reduce Master
 func newMaster(master string) (mr *Master) {
 	mr = new(Master)
-	mr.address = master
+	mr.Address = master
 	mr.shutdown = make(chan struct{})
-	mr.registerChannel = make(chan string)
-	mr.doneChannel = make(chan bool)
+	mr.RegisterChannel = make(chan string)
+	mr.DoneChannel = make(chan bool)
+
+	// added for panel package
+	userStruct, err := user.Current()
+	if err == nil {
+		mr.User = userStruct.Username
+	}
+	mr.StartTime = time.Now()
+	mr.SchedulingMode = "No Mode"
+
 	return
 }
 // Sequential runs map and reduce tasks sequentially, waiting for 
@@ -58,15 +76,15 @@ func Sequential(jobName string, files []string, nreduce int,
 		switch phase {
 		case mapPhase:
 			for i, f := range files {
-				doMap(mr.jobName, i, f, mr.nReduce, mapF)
+				doMap(mr.JobName, i, f, mr.NReduce, mapF)
 			}
 		case reducePhase:
-			for i := 0; i < mr.nReduce; i++ {
-				doReduce(mr.jobName, i, len(mr.files), reduceF)
+			for i := 0; i < mr.NReduce; i++ {
+				doReduce(mr.JobName, i, len(mr.Files), reduceF)
 			}
 		}
 		}, func() {
-			mr.stats = []int{len(files) + nreduce}
+			mr.Stats = []int{len(files) + nreduce}
 			})
 	return
 }
@@ -77,7 +95,7 @@ func Distributed(jobName string, files []string, nreduce int, master string) (mr
 	mr = newMaster(master)
 	mr.startRPCServer()
 	go mr.run(jobName, files, nreduce, mr.schedule, func() {
-		mr.stats = mr.killWorkers()
+		mr.Stats = mr.killWorkers()
 		mr.stopRPCServer()
 		})
 	return
@@ -88,27 +106,27 @@ func (mr *Master) run(jobName string, files []string, nreduce int,
 	schedule func(phase jobPhase),
 	finish func(),
 ) {
-	mr.jobName = jobName
-	mr.files = files
-	mr.nReduce = nreduce
+	mr.JobName = jobName
+	mr.Files = files
+	mr.NReduce = nreduce
 
-	fmt.Printf("%s: starting Map/Reduce task %s\n", mr.address, mr.jobName)
+	fmt.Printf("%s: starting Map/Reduce task %s\n", mr.Address, mr.JobName)
 
 	schedule(mapPhase)
 	schedule(reducePhase)
 	finish()
 	mr.merge()
 
-	fmt.Printf("%s: Map/Reduce task completed\n", mr.address)
+	fmt.Printf("%s: Map/Reduce task completed\n", mr.Address)
 
-	mr.doneChannel <- true
+	mr.DoneChannel <- true
 }
 
 // Wait blocks until the currently scheduled work has completed.
 // This happens when all tasks have scheduled and completed, the final output
 // have been computed, and all workers have been shut down.
 func (mr *Master) Wait() {
-	<-mr.doneChannel
+	<-mr.DoneChannel
 }
 
 // killWorkers cleans up all workers by sending each one a Shutdown RPC.
@@ -116,8 +134,8 @@ func (mr *Master) Wait() {
 func (mr *Master) killWorkers() []int {
 	mr.Lock() // lock to ensure exclusive access
 	defer mr.Unlock()
-	ntasks := make([]int, 0, len(mr.workers))
-	for _, w := range mr.workers {
+	ntasks := make([]int, 0, len(mr.Workers))
+	for _, w := range mr.Workers {
 		debug("Master: shutdown worker %s\n", w)
 		var reply ShutdownReply
 		ok := call(w, "Worker.Shutdown", new(struct{}), &reply)
