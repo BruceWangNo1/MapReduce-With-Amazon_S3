@@ -32,6 +32,7 @@ type Master struct {
 	SchedulingMode string
 	ElapsedTime float64
 	workerReady chan bool // once a worker is ready, a signal is sent
+	workerAddress chan string
 }
 
 // Register is an RPC method that is called by workers after they have started 
@@ -39,10 +40,12 @@ type Master struct {
 func (mr *Master) Register(args *RegisterArgs, _ *struct{}) error {
 	mr.Lock()
 	defer mr.Unlock()
-	debug("Register: worker %s\n", args.Worker)
-	mr.Workers = append(mr.Workers, args.Worker)
+	//debug("Register: worker %s\n", args.Worker)
+	workerAddress := <-mr.workerAddress
+	debug("Register: worker %s\n", workerAddress)
+	mr.Workers = append(mr.Workers, workerAddress)
 	go func() {
-		mr.RegisterChannel <- args.Worker
+		mr.RegisterChannel <- workerAddress
 		mr.workerReady <- true
 	}()
 	return nil
