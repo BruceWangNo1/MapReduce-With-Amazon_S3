@@ -31,7 +31,7 @@ type Master struct {
 	StartTime time.Time
 	SchedulingMode string
 	ElapsedTime float64
-
+	workerReady chan bool // once a worker is ready, a signal is sent
 }
 
 // Register is an RPC method that is called by workers after they have started 
@@ -43,6 +43,7 @@ func (mr *Master) Register(args *RegisterArgs, _ *struct{}) error {
 	mr.Workers = append(mr.Workers, args.Worker)
 	go func() {
 		mr.RegisterChannel <- args.Worker
+		mr.workerReady <- true
 	}()
 	return nil
 }
@@ -54,13 +55,14 @@ func newMaster(master string) (mr *Master) {
 	mr.shutdown = make(chan struct{})
 	mr.RegisterChannel = make(chan string)
 	mr.DoneChannel = make(chan bool)
+	mr.workerReady = make(chan bool)
 
 	// added for panel package
 	userStruct, err := user.Current()
 	if err == nil {
 		mr.User = userStruct.Username
 	}
-	mr.StartTime = time.Now()
+
 	mr.SchedulingMode = "No Mode"
 
 	return
@@ -107,6 +109,13 @@ func (mr *Master) run(jobName string, files []string, nreduce int,
 	schedule func(phase jobPhase),
 	finish func(),
 ) {
+	go func() {
+		<-mr.workerReady
+		mr.StartTime = time.Now()
+		for {
+			<-mr.workerReady
+		}
+	}()
 	mr.JobName = jobName
 	mr.Files = files
 	mr.NReduce = nreduce
