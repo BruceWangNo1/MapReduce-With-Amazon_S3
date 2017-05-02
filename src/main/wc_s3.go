@@ -12,7 +12,7 @@ import (
  	// "github.com/aws/aws-sdk-go/aws/session"
     //"github.com/aws/aws-sdk-go/service/s3/s3manager"
     //"log"
-	"panel"
+	//"panel"
 )
 
 // The mapping function is called once for each piece of the input.
@@ -58,7 +58,7 @@ func main() {
 		} else {
 			mr = sophie.Distributed("wc_distributed", sophie.GetKeys(os.Args[3]), 3, os.Args[2]) // os.Args[3:]
 		}
-		panel.StartServer(mr)
+		//panel.StartServer(mr)
 		mr.Wait()
 	} else {
 		sophie.RunWorker(os.Args[2], os.Args[3], mapF, reduceF, 100)

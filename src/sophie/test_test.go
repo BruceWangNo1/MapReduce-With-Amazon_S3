@@ -68,16 +68,6 @@ func TestUploadFileStream(t *testing.T) {
 		log.Fatal("failed to open file", err)
 	}
 
-	// reader, writer := io.Pipe()
-	// go func() {
-	// 	gw := gzip.NewWriter(writer)
-	// 	io.Copy(gw, file)
-
-	// 	file.Close()
-	// 	gw.Close()
-	// 	writer.Close()
-	// }()
-
 	uploader := s3manager.NewUploader(session.New(&aws.Config{Region: aws.String("ap-northeast-1")}))
 	result, err := uploader.Upload(&s3manager.UploadInput{
 		Body: file,

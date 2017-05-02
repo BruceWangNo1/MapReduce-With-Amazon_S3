@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/aws"
-    "github.com/aws/aws-sdk-go/aws/session"
-    "log"
+    	"github.com/aws/aws-sdk-go/aws/session"
+    	"log"
 )
 
 // Debugging enabled?
@@ -50,7 +50,8 @@ func GetKeys(prefix string) []string {
 	fmt.Println("list objects in a bucket")
 	svc := s3.New(session.New(&aws.Config{Region: aws.String("ap-northeast-1")}))
 	result, err := svc.ListObjects(&s3.ListObjectsInput{
-		Bucket: aws.String("mybucketbruce"),
+		//Bucket: aws.String("mybucketbruce"),
+		Bucket: aws.String("fiction-books"),
 		Prefix: aws.String(prefix),
 		})
 	if err != nil {

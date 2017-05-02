@@ -67,13 +67,6 @@ func (wk *Worker) register(master string) {
 	for ok == false {
 		ok = call(master, "Master.Register", args, new(struct{}))
 	}
-	//ok := call(master, "Master.Register", args, new(struct{}))
-	//if ok == false {
-	//	fmt.Printf("Register: RPC %s register error\n", master)
-	//}ok := call(master, "Master.Register", args, new(struct{}))
-	//if ok == false {
-	//	fmt.Printf("Register: RPC %s register error\n", master)
-	//}
 }
 
 // RunWorker sets up a connection with the master, registers its address, and 
