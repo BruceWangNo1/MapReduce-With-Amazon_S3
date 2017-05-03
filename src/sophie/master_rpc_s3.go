@@ -39,7 +39,12 @@ func (mr *Master) startRPCServer() {
 				}
 				conn, err := mr.l.Accept()
 				if err == nil {
-					mr.workerAddress <- conn.RemoteAddr().String()
+					fmt.Println("conn.RemoteAddress().String():")
+					fmt.Println(conn.RemoteAddr().String())
+					go func() {
+						mr.workerAddress <- conn.RemoteAddr().String()
+					}()
+
 					go func() {
 						rpcs.ServeConn(conn) // ServeConn blocks, serving the connection until the client hangs up.
 						conn.Close()

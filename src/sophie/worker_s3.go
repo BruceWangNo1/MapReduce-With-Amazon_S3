@@ -71,7 +71,7 @@ func (wk *Worker) register(master string) {
 
 // RunWorker sets up a connection with the master, registers its address, and 
 // waits for tasks to be scheduled.
-func RunWorker(MasterAddress string, me string, 
+func RunWorker(MasterAddress string, me string,
 	MapFunc func(string, string) []KeyValue,
 	ReduceFunc func(string, []string) string, 
 	nRPC int, 
@@ -91,7 +91,9 @@ func RunWorker(MasterAddress string, me string,
 		log.Fatal("RunWorker: worker ", me, " error: ", e)
 	}
 	wk.l = l
+	fmt.Println("worker is preparing to register with master")
 	wk.register(MasterAddress)
+	fmt.Println("registration done")
 
 	// DON'T MODIFY CODE BELOW
 	for {

@@ -6,6 +6,7 @@ import (
 	"sync"
 	"os/user"
 	"time"
+	"strings"
 )
 
 // Master holds all the states that the master needs to keep track off
@@ -38,10 +39,13 @@ type Master struct {
 // Register is an RPC method that is called by workers after they have started 
 // up to report that they are ready to receive tasks.
 func (mr *Master) Register(args *RegisterArgs, _ *struct{}) error {
+	fmt.Println("rpc by worker to register")
 	mr.Lock()
 	defer mr.Unlock()
 	//debug("Register: worker %s\n", args.Worker)
-	workerAddress := <-mr.workerAddress
+
+	workerAddressWithPort := <-mr.workerAddress
+	workerAddress := strings.Split(workerAddressWithPort, ":")[0] + ":7778"
 	debug("Register: worker %s\n", workerAddress)
 	mr.Workers = append(mr.Workers, workerAddress)
 	go func() {
@@ -59,6 +63,7 @@ func newMaster(master string) (mr *Master) {
 	mr.RegisterChannel = make(chan string)
 	mr.DoneChannel = make(chan bool)
 	mr.workerReady = make(chan bool)
+	mr.workerAddress = make(chan string)
 
 	// added for panel package
 	userStruct, err := user.Current()

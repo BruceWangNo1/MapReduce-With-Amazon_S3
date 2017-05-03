@@ -51,6 +51,7 @@ type RegisterArgs struct {
 func call(srv string, rpcname string,
 	args interface{}, reply interface{}) bool {
 	// c, errx := rpc.Dial("unix", srv)
+	fmt.Println("send an RPC to the rpcname handler")
 	c, errx := rpc.Dial("tcp", srv)
 	if errx != nil {
 		return false
@@ -59,9 +60,11 @@ func call(srv string, rpcname string,
 
 	err := c.Call(rpcname, args, reply)
 	if err == nil {
+		fmt.Println("send an RPC to the rpcname handler done")
 		return true
 	}
 
 	fmt.Println(err)
+
 	return false
 }
