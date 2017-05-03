@@ -64,7 +64,7 @@ func main() {
 		//panel.StartServer(mr)
 		//mr.Wait()
 	} else {
-		sophie.RunWorker(os.Args[2], os.Args[3], mapF, reduceF, 10000)
+		sophie.RunWorker(os.Args[2], os.Args[3], mapF, reduceF, 100000)
 	}
 
 
