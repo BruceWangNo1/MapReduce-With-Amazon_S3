@@ -41,6 +41,7 @@ func (mr *Master) startRPCServer() {
 				if err == nil {
 					fmt.Println("conn.RemoteAddress().String():")
 					fmt.Println(conn.RemoteAddr().String())
+					fmt.Println(conn.LocalAddr().String())
 					go func() {
 						mr.workerAddress <- conn.RemoteAddr().String()
 					}()

@@ -51,17 +51,20 @@ func main() {
 	if len(os.Args) < 4 {
 		fmt.Printf("%s: see usage comments in file\n", os.Args[0])
 	} else if os.Args[1] == "master" {
-		var mr *sophie.Master
+		//var mr *sophie.Master
 		fmt.Println(os.Args[2])
 		if os.Args[2] == "sequential" {
-			mr = sophie.Sequential("wcseq", sophie.GetKeys(os.Args[3]), 3, mapF, reduceF) // os.Args[3:]
+			//mr = sophie.Sequential("wcseq", sophie.GetKeys(os.Args[3]), 3, mapF, reduceF) // os.Args[3:]
+			sophie.Sequential("wcseq", sophie.GetKeys(os.Args[3]), 3, mapF, reduceF) // os.Args[3:]
+
 		} else {
-			mr = sophie.Distributed("wc_distributed", sophie.GetKeys(os.Args[3]), 3, os.Args[2]) // os.Args[3:]
+			//mr = sophie.Distributed("wc_distributed", sophie.GetKeys(os.Args[3]), 3, os.Args[2]) // os.Args[3:]
+			sophie.Distributed("wc_distributed", sophie.GetKeys(os.Args[3]), 3, os.Args[2]) // os.Args[3:]
 		}
 		//panel.StartServer(mr)
-		mr.Wait()
+		//mr.Wait()
 	} else {
-		sophie.RunWorker(os.Args[2], os.Args[3], mapF, reduceF, 100)
+		sophie.RunWorker(os.Args[2], os.Args[3], mapF, reduceF, 10000)
 	}
 
 

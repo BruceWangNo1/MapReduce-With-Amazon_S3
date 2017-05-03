@@ -102,13 +102,16 @@ func Sequential(jobName string, files []string, nreduce int,
 //Distributed schedules map and reduce tasks on workers that register with the 
 // master over RPC
 func Distributed(jobName string, files []string, nreduce int, master string) (mr *Master) {
-
-	mr = newMaster(master)
-	mr.startRPCServer()
-	go mr.run(jobName, files, nreduce, mr.schedule, func() {
-		mr.Stats = mr.killWorkers()
-		mr.stopRPCServer()
+	for {
+		mr = newMaster(master)
+		mr.startRPCServer()
+		go mr.run(jobName, files, nreduce, mr.schedule, func() {
+			mr.Stats = mr.killWorkers()
+			mr.stopRPCServer()
 		})
+		<-mr.DoneChannel
+	}
+
 	return
 }
 // run executes a mapreduce job on the given number of mappers and reducers
