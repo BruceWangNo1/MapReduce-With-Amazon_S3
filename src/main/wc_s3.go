@@ -45,12 +45,12 @@ func reduceF(key string, values []string) string {
 
 // Can be run in 3 ways:
 // 1) Sequential (e.g., go run wc.go master sequential x1.txt .. xN.txt)
-// 2) Master (e.g., go run wc.go master localhost:7777 x1.txt .. xN.txt)
+// 2) Master (e.g., go run wc.go master localhost:7777 x1.txt .. xN.txt 16)
 // 3) Worker (e.g., go run wc.go worker localhost:7777 localhost:7778 &)
 func main() {
-	if len(os.Args) < 4 {
-		fmt.Printf("%s: see usage comments in file\n", os.Args[0])
-	} else if os.Args[1] == "master" {
+	if (len(os.Args) == 4 && os.Args[1] == "worker") {
+		sophie.RunWorker(os.Args[2], os.Args[3], mapF, reduceF, 100000)
+	} else if (len(os.Args) == 6 && os.Args[1] == "master") {
 		//var mr *sophie.Master
 		fmt.Println(os.Args[2])
 		if os.Args[2] == "sequential" {
@@ -59,13 +59,59 @@ func main() {
 
 		} else {
 			//mr = sophie.Distributed("wc_distributed", sophie.GetKeys(os.Args[3]), 3, os.Args[2]) // os.Args[3:]
-			sophie.Distributed("wc_distributed", sophie.GetKeys(os.Args[3]), 3, os.Args[2]) // os.Args[3:]
+			//sophie.Distributed("wc_distributed", sophie.GetKeys(os.Args[3]), 3, os.Args[2]) // os.Args[3:]
+
+			//change the number of reducers to 16 to accommodate ecs docker benchmark
+			nreduce, err := strconv.Atoi(os.Args[4])
+			if err != nil {
+				fmt.Println("nreduce is wrong")
+				return
+			}
+			nworkers, err1 := strconv.Atoi(os.Args[5])
+			if err1 != nil {
+				fmt.Println("nworkers is wrong")
+				return
+			}
+			sophie.Distributed("wc_distributed", sophie.GetKeys(os.Args[3]), nreduce, os.Args[2], nworkers) // os.Args[3:]
+			//sophie.Distributed("wc_distributed", os.Args[3], nreduce, os.Args[2], nworkers) // os.Args[3:]
+
 		}
 		//panel.StartServer(mr)
 		//mr.Wait()
 	} else {
-		sophie.RunWorker(os.Args[2], os.Args[3], mapF, reduceF, 100000)
+		fmt.Printf("%s: see usage comments in file\n", os.Args[0])
 	}
+	//if len(os.Args) < 5 {
+	//	fmt.Printf("%s: see usage comments in file\n", os.Args[0])
+	//} else if os.Args[1] == "master" {
+	//	//var mr *sophie.Master
+	//	fmt.Println(os.Args[2])
+	//	if os.Args[2] == "sequential" {
+	//		//mr = sophie.Sequential("wcseq", sophie.GetKeys(os.Args[3]), 3, mapF, reduceF) // os.Args[3:]
+	//		sophie.Sequential("wcseq", sophie.GetKeys(os.Args[3]), 3, mapF, reduceF) // os.Args[3:]
+	//
+	//	} else {
+	//		//mr = sophie.Distributed("wc_distributed", sophie.GetKeys(os.Args[3]), 3, os.Args[2]) // os.Args[3:]
+	//		//sophie.Distributed("wc_distributed", sophie.GetKeys(os.Args[3]), 3, os.Args[2]) // os.Args[3:]
+	//
+	//		//change the number of reducers to 16 to accommodate ecs docker benchmark
+	//		nreduce, err := strconv.Atoi(os.Args[4])
+	//		if err != nil {
+	//			fmt.Println("nreduce is wrong")
+	//			return
+	//		}
+	//		nworkers, err1 := strconv.Atoi(os.Args[5])
+	//		if err1 != nil {
+	//			fmt.Println("nworkers is wrong")
+	//			return
+	//		}
+	//		sophie.Distributed("wc_distributed", sophie.GetKeys(os.Args[3]), nreduce, os.Args[2], nworkers) // os.Args[3:]
+	//	}
+	//	//panel.StartServer(mr)
+	//	//mr.Wait()
+	//} else {
+	//	sophie.RunWorker(os.Args[2], os.Args[3], mapF, reduceF, 100000)
+	//}
 
 
 }

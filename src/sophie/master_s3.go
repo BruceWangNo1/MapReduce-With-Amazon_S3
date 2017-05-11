@@ -32,8 +32,10 @@ type Master struct {
 	StartTime time.Time
 	SchedulingMode string
 	ElapsedTime float64
-	workerReady chan bool // once a worker is ready, a signal is sent
+	//workerReady chan bool // once a worker is ready, a signal is sent
 	workerAddress chan string
+	RegisterChannelCount chan string //worker do not start until specified number of workers are all ready
+	nworkers int // the number of ready workers need to be start the job together
 }
 
 // Register is an RPC method that is called by workers after they have started 
@@ -50,7 +52,8 @@ func (mr *Master) Register(args *RegisterArgs, _ *struct{}) error {
 	mr.Workers = append(mr.Workers, workerAddress)
 	go func() {
 		mr.RegisterChannel <- workerAddress
-		mr.workerReady <- true
+		mr.RegisterChannelCount <- workerAddress
+		//mr.workerReady <- true
 	}()
 	return nil
 }
@@ -61,8 +64,32 @@ func newMaster(master string) (mr *Master) {
 	mr.Address = master
 	mr.shutdown = make(chan struct{})
 	mr.RegisterChannel = make(chan string)
+	mr.RegisterChannelCount = make(chan string)
 	mr.DoneChannel = make(chan bool)
-	mr.workerReady = make(chan bool)
+	//mr.workerReady = make(chan bool)
+	mr.workerAddress = make(chan string)
+
+	// added for panel package
+	userStruct, err := user.Current()
+	if err == nil {
+		mr.User = userStruct.Username
+	}
+
+	mr.SchedulingMode = "No Mode"
+
+	return
+}
+
+// newMasterDistributed initialize a new Map/Reduce Master
+func newMasterDistributed(master string, nworkers int) (mr *Master) {
+	mr = new(Master)
+	mr.Address = master
+	mr.nworkers = nworkers
+	mr.shutdown = make(chan struct{})
+	mr.RegisterChannel = make(chan string, nworkers)
+	mr.RegisterChannelCount = make(chan string, nworkers)
+	mr.DoneChannel = make(chan bool)
+	//mr.workerReady = make(chan bool)
 	mr.workerAddress = make(chan string)
 
 	// added for panel package
@@ -101,16 +128,23 @@ func Sequential(jobName string, files []string, nreduce int,
 
 //Distributed schedules map and reduce tasks on workers that register with the 
 // master over RPC
-func Distributed(jobName string, files []string, nreduce int, master string) (mr *Master) {
-	for {
-		mr = newMaster(master)
-		mr.startRPCServer()
-		go mr.run(jobName, files, nreduce, mr.schedule, func() {
-			mr.Stats = mr.killWorkers()
-			mr.stopRPCServer()
-		})
-		<-mr.DoneChannel
-	}
+func Distributed(jobName string, files []string, nreduce int, master string, nworkers int) (mr *Master) {
+	//for {
+	//	mr = newMasterDistributed(master, nworkers)
+	//	mr.startRPCServer()
+	//	go mr.run(jobName, files, nreduce, mr.schedule, func() {
+	//		mr.Stats = mr.killWorkers()
+	//		mr.stopRPCServer()
+	//	})
+	//	<-mr.DoneChannel
+	//}
+	mr = newMasterDistributed(master, nworkers)
+	mr.startRPCServer()
+	go mr.run(jobName, files, nreduce, mr.schedule, func() {
+		mr.Stats = mr.killWorkers()
+		mr.stopRPCServer()
+	})
+	<-mr.DoneChannel
 
 	return
 }
@@ -120,17 +154,21 @@ func (mr *Master) run(jobName string, files []string, nreduce int,
 	schedule func(phase jobPhase),
 	finish func(),
 ) {
-	go func() {
-		<-mr.workerReady
-		mr.StartTime = time.Now()
-		for {
-			<-mr.workerReady
-		}
-	}()
+	//go func() {
+	//	<-mr.workerReady
+	//	mr.StartTime = time.Now()
+	//	for {
+	//		<-mr.workerReady
+	//	}
+	//}()
 	mr.JobName = jobName
 	mr.Files = files
 	mr.NReduce = nreduce
 
+	for i := 0; i < mr.nworkers; i++ {
+		<-mr.RegisterChannelCount
+	}
+	mr.StartTime = time.Now()
 	fmt.Printf("%s: starting Map/Reduce task %s\n", mr.Address, mr.JobName)
 
 	schedule(mapPhase)
