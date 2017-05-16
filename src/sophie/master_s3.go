@@ -30,6 +30,7 @@ type Master struct {
 	// added for panel package
 	User string
 	StartTime time.Time
+	MapTime float64
 	SchedulingMode string
 	ElapsedTime float64
 	//workerReady chan bool // once a worker is ready, a signal is sent
@@ -172,13 +173,17 @@ func (mr *Master) run(jobName string, files []string, nreduce int,
 	fmt.Printf("%s: starting Map/Reduce task %s\n", mr.Address, mr.JobName)
 
 	schedule(mapPhase)
+	mr.MapTime = time.Since(mr.StartTime).Seconds()
+
 	schedule(reducePhase)
+
 	finish()
 	mr.merge()
 
 	fmt.Printf("%s: Map/Reduce task completed\n", mr.Address)
 	mr.ElapsedTime = time.Since(mr.StartTime).Seconds()
-	fmt.Printf("The program finished in %v\n", mr.ElapsedTime)
+	fmt.Printf("Map time is %v s\n", mr.MapTime)
+	fmt.Printf("The program finished in %v s\n", mr.ElapsedTime)
 
 	mr.DoneChannel <- true
 }

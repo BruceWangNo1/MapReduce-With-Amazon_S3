@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"sync"
+	"time"
 )
 
 // Master holds all the states that the master needs to keep track off
@@ -23,6 +24,10 @@ type Master struct {
 	shutdown chan struct{}
 	l net.Listener
 	stats []int
+
+	StartTime time.Time
+	MapTime float64
+	ElapsedTime float64
 }
 
 // Register is an RPC method that is called by workers after they have started 
@@ -94,12 +99,19 @@ func (mr *Master) run(jobName string, files []string, nreduce int,
 
 	fmt.Printf("%s: starting Map/Reduce task %s\n", mr.address, mr.jobName)
 
+	mr.StartTime = time.Now()
+
 	schedule(mapPhase)
+	mr.MapTime = time.Since(mr.StartTime).Seconds()
+
 	schedule(reducePhase)
 	finish()
 	mr.merge()
 
 	fmt.Printf("%s: Map/Reduce task completed\n", mr.address)
+	mr.ElapsedTime = time.Since(mr.StartTime).Seconds()
+	fmt.Printf("Map time is %v s\n", mr.MapTime)
+	fmt.Printf("The program finished in %v s\n", mr.ElapsedTime)
 
 	mr.doneChannel <- true
 }

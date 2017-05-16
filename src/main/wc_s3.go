@@ -48,8 +48,15 @@ func reduceF(key string, values []string) string {
 // 2) Master (e.g., go run wc.go master localhost:7777 x1.txt .. xN.txt 16)
 // 3) Worker (e.g., go run wc.go worker localhost:7777 localhost:7778 &)
 func main() {
-	if (len(os.Args) == 4 && os.Args[1] == "worker") {
-		sophie.RunWorker(os.Args[2], os.Args[3], mapF, reduceF, 100000)
+	if (os.Args[1] == "worker") {
+		if len(os.Args) == 5 {
+			nRPC, err := strconv.Atoi(os.Args[4])
+			if err == nil {
+				sophie.RunWorker(os.Args[2], os.Args[3], mapF, reduceF, nRPC)
+			}
+		} else {
+			sophie.RunWorker(os.Args[2], os.Args[3], mapF, reduceF, 100000000)
+		}
 	} else if (len(os.Args) == 6 && os.Args[1] == "master") {
 		//var mr *sophie.Master
 		fmt.Println(os.Args[2])
