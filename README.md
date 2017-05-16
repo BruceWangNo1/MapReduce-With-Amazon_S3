@@ -1,58 +1,32 @@
-Sophie - MapReduce implementation of distributed systems in Golang with Amazon S3
+Sophie - Implementation of A Distributed MapReduce library
 ============================
 
-This project is inspired by the MIT course [6.824: Distributed Systems](https://pdos.csail.mit.edu/6.824/index.html) and most of the code is from the course lab assignment.
+This project is inspired by the MIT course [6.824: Distributed Systems](https://pdos.csail.mit.edu/6.824/index.html) and a large portion of the code based on lab assignment.
 
-I intend to add features so that this could be deployed on a master and a certain number of slaves with a shared storage utilizing Amazon S3 (Simple Storage Service).
+This library could be used to deploy MapReduce tasks on a cluster with the help of AWS including Amazon EC2 (one instance as a master), Amazon S3 (shared storage), Amazon ECS (one cluster of workers), and Amazon ECR (for storing our worker docker image). Before you begin your trial, you should have a good understanding of all these things above.
+This library is fault-tolerant to worker failures and can scale to accommodate increasing needs with little overhead cost.
+
 
 ## Project Logo: Sophie
 Courtesy of my enthusiastic roommate Ligu.
 ![Sophie_logo Designed by Ligu](src/panel/public/static/sophie_logo_1_800px.png)
 
+
 ## Environment
-At first I developed and deployed this project solely on my laptop. At Usage 3, I spinned up an AWS S3 service as a shared storage for the program and thus S3 was involved. From Usage 4, I started to sync my code to AWS EC2 service to gain better response time with S3.
+The master should be deployed on an Amazon EC2 instance.
+The workers should be deployed on an Amazon ECS cluster of docker instances from a worker docker image uploaded.
+We show you how to use this library and run this project by the classic word count example.
 
-## Usage
 
-1. Original Lab Test
-	
+## Usage Example
+1. Set up Amazon Credentials in your terminal and sophie/s3.go.
+2. Master: Run command like this in your EC2 instance.
 	```
-	/src/mapreduce
-	go test -run SequentialMany
-	go test -run Sequential
-	go test -run TestBasic
-	go test -run Failure
+	go run src/main/wc_s3.go master 192.168.1.1:7777 random 3 3
 	```
-2. Original Work Count Test
+3. Worker: Use ./Dockerfile to build the worker docker image and pushed to the ECS repository. Please change the corresponding parts to accommodate your specification. Launch a cluste of docker instances and specify your task definition and run your task.
+4. Now your task is running.                                                     
 
-	```
-	/src/main
-	bash ./test-mr.sh
-	```
-3. Sophie AWS S3 Service Test
-
-	```
-	/src/sophie
-	go test -run TestListBuckets
-	go test -run TestCreateBuckets
-	go test -run TestUploadFileStream
-	go test -run TestDownloadFile
-	```
-	
-4. Start three terminals and run the following three commands respectively 	(you should try to run the last two simultaneously becuase they finish 	really quickly. Notice that you need to comment out the panel service in 	wc_s3.go.)
-
-	```
-	/src/main
-	go run wc_s3.go master localhost:7777 pg
-	go run wc_s3.go worker localhost:7777 localhost:7778
-	go run wc_s3.go worker localhost:7777 localhost:7779
-	```
-5. Web UI in progress. Go to localhost:8000 to view web UI
-
-	```
-	$GOPATH
-	./test.sh
-	```
 
 ## Contributing
 1. Fork it!
