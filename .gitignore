@@ -8,3 +8,4 @@ src/rpc_learning/
 worker_1.log
 worker_2.log
 */.DS_Store
+src/panel
