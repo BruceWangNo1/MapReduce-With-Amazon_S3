@@ -10,8 +10,8 @@ WORKDIR /root
 ENV GOPATH /root/MapReduce-With-Amazon_S3
 ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
 ENV AWS_REGION ap-northeast-1
-ENV AWS_ACCESS_KEY_ID AKIAIV6SCU7UXUV5DUFQ
-ENV AWS_SECRET_ACCESS_KEY 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
+ENV AWS_ACCESS_KEY_ID sssss
+ENV AWS_SECRET_ACCESS_KEY sssss
 COPY src /root/MapReduce-With-Amazon_S3/src
 WORKDIR /root/MapReduce-With-Amazon_S3
 CMD ["go", "run", "src/main/primality_mr.go", "worker", "172.31.31.161:7777", "0.0.0.0:7778"]
